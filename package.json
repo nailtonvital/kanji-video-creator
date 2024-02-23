@@ -1,0 +1,24 @@
+{
+  "name": "kanji-video-creator",
+  "version": "1.0.0",
+  "description": "a informative kanji video creator for social media",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
+  },
+  "keywords": [
+    "video",
+    "video-handling",
+    "ffmpeg",
+    "reels",
+    "tik",
+    "tok",
+    "shorts"
+  ],
+  "author": "nailtonvital",
+  "license": "ISC",
+  "dependencies": {
+    "ffmpeg": "^0.0.4"
+  }
+}
