@@ -17,6 +17,7 @@
         <h2>国</h2>
       </canvas>
     </div>
+
     <div class="demo-controls">
       <form class="form-inline">
         <div class="checkbox">
@@ -32,26 +33,11 @@
         </div>
       </form>
     </div>
-    <script
-      src="https://cdn.socket.io/4.5.4/socket.io.min.js"
-      integrity="sha384-/KNQL8Nu5gCHLqwqfQjA689Hhoqgi2S84SNUxC3roTe4EhJ9AfLkp8QiQcU8AMzI"
-      crossorigin="anonymous"
-    ></script>
     <script type="text/javascript" src="/hanzi-writer.js"></script>
     <script type="text/javascript">
-      var socket = io("http://localhost:3000");
-
-      socket.on("connect", () => {
-        console.log("connect");
-      });
-
-      socket.on("disconnect", () => {
-        console.log("disconnect");
-      });
-
       var writer = HanziWriter.create("animation-target", "国", {
-        width: 400,
-        height: 400,
+        width: 688,
+        height: 688,
         padding: 5,
         showOutline: true,
         strokeAnimationSpeed: 0.8,
@@ -73,10 +59,13 @@
               console.log("Animation complete! Duration: ", timeTotal, "ms");
               writer.animateCharacter();
               generateVideo(timeTotal);
+              getImageTemplate();
             },
           });
           console.log("clicked");
         });
+
+      var kanji = "<%= kanjiData.kanji %>";
 
       const canvas = document.getElementById("animation-target");
 
@@ -109,9 +98,19 @@
             }
           };
 
-          mediaRecorder.onstop = function (event) {
-            var blob = new Blob(recordedChunks, { type: "video/webm" });
-            var url = URL.createObjectURL(blob);
+          mediaRecorder.onstop = async function (event) {
+            // make mp4 from webm
+            const blob = new Blob(recordedChunks, { type: "video/webm" });
+            const url = URL.createObjectURL(blob);
+
+            await fetch("http://localhost:3000/raw/:cmd", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/octet-stream",
+                "test-header": "test",
+              },
+              body: blob,
+            });
             res(url);
           };
         });
@@ -133,11 +132,12 @@
         var link$ = document.createElement("a");
         link$.setAttribute("download", "recordingVideo");
         recording.then((url) => {
-          console.log(url);
-          socket.emit("video", {url});
           link$.setAttribute("href", url);
-          //   link$.click();
         });
+      }
+
+      async function getImageTemplate() {
+        await fetch(`http://localhost:3000/image?url=template`);
       }
     </script>
   </body>

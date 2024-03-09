@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" type="text/css" href="/template.css" />
+    <title>Template</title>
+  </head>
+  <body>
+    <div class="container">
+        <h1><%= kanjiData.kanji %></h1>
+        <h3><%= kanjiData.reading %></h3>
+      <p><%= kanjiData.meaning %></p>
+    </div>
+    <script type="text/javascript">
+      function randomHSLA() {
+        return `hsla(${~~(360 * Math.random())}, 70%,  72%, 0.6)`;
+      }
+      window.onload = function () {
+        document.body.style.background = randomHSLA();
+      };
+    </script>
+  </body>
+</html>
