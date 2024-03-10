@@ -8,7 +8,7 @@ export const getScreenshot = async (req, fileName) => {
     await page.goto("http://localhost:3000/" + url);
     await page.screenshot({
         type: "png",
-        path: `./generated/${fileName}.png`
+        path: `./generated/temp/${fileName}.png`
     });
     await browser.close();
 
