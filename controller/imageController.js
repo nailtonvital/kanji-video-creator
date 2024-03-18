@@ -4,12 +4,20 @@ export const getScreenshot = async (req, fileName) => {
     const { url } = req.query;
     const browser = await puppeteer.launch();
     const page = await browser.newPage();
-    await page.setViewport({ width: 1080, height: 1920 });
-    await page.goto("http://localhost:3000/" + url);
-    await page.screenshot({
-        type: "png",
-        path: `./generated/temp/${fileName}.png`
-    });
-    await browser.close();
+    try {
+        await page.setViewport({ width: 1080, height: 1920 });
+        await page.goto("http://localhost:3000/" + url);
+        // wait for background image to load
+        await page.waitForSelector("#tester");
+
+        await page.screenshot({
+            type: "png",
+            path: `./generated/temp/${fileName}.png`
+        });
+    } catch (error) {
+        console.error("Error occurred while taking screenshot:", error);
+    } finally {
+        await browser.close();
+    }
 
 }

@@ -1,167 +1,197 @@
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+      crossorigin="anonymous"
+    />
+    <link rel="stylesheet" type="text/css" href="/style.css" />
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" />
-  <link rel="stylesheet" type="text/css" href="/style.css" />
+    <title>Document</title>
+  </head>
 
-  <title>Document</title>
-</head>
-
-<body>
-  <div id="animation-area">
-</body>
-<canvas class="demo-target" id="animation-target"></canvas>
-
-</div>
-
-<div class="demo-controls">
-  <form class="form-inline">
-    <div class="checkbox">
-      <label>
-        <input type="checkbox" checked="checked" id="animation-show-outline" />
-        Show Outline
-      </label>
-      <button class="btn btn-primary" id="animate-button">Animate!</button>
+  <body class="container">
+    <div class="">
+      <div class="input-group d-flex mx-auto my-2 w-50">
+        <span class="input-group-text" id="inputGroup-sizing-default"
+          >Kanji</span
+        >
+        <input
+          id="kanji-input"
+          type="text"
+          class="form-control"
+          aria-label="Sizing example input"
+          aria-describedby="inputGroup-sizing-default"
+        />
+        <button class="btn btn-primary" id="animate-button">Animate!</button>
+      </div>
     </div>
-  </form>
-</div>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script type="text/javascript" src="/hanzi-writer.js"></script>
-<script type="text/javascript">
-  var kanji = "<%= kanjiData.kanji %>";
+    <div class="mx-auto d-flex flex-row mb-3" id="animation-area">
+      <canvas class="demo-target" id="animation-target"></canvas>
+    </div>
 
-  var writer = HanziWriter.create("animation-target", kanji, {
-    charDataLoader: function (char, onComplete) {
-      $.getJSON(`https://raw.githubusercontent.com/mnako/hanzi-writer-data-ja/master/data/${kanji}.json`, function (charData) {
-        onComplete(charData);
-      });
-    },
-    width: 782,
-    height: 782,
-    padding: 5,
-    showOutline: false,
-    showCharacter: false,
-    outlineColor: "#fff",
-    drawingWidth: 4.1,
-    strokeAnimationSpeed: 0.5,
-    delayBetweenStrokes: 30,
-    renderer: "canvas",
-  });
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+      crossorigin="anonymous"
+    ></script>
 
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script type="text/javascript" src="/hanzi-writer.js"></script>
+    <script type="text/javascript">
+      var kanji = "<%= kanjiData.kanji %>";
 
-  document
-    .getElementById("animate-button")
-    .addEventListener("click", function (e) {
-      e.preventDefault();
-      let startTime = performance.now();
+      var kanjiInput = document.getElementById("kanji-input");
+      kanjiInput.value = kanji;
 
-writer.animateCharacter({
-  onComplete: function () {
-    let endTime = performance.now();
-    // Use DOMHighResTimeStamp for more accurate timing
-    const totalDuration = Math.round(endTime - startTime);
-          console.log("Animation complete! Duration: ", timeTotal, "ms");
-          writer.animateCharacter();
-          generateVideo(timeTotal);
-          getImageTemplate();
+      var writer = HanziWriter.create("animation-target", kanji, {
+        charDataLoader: function (char, onComplete) {
+          $.getJSON(
+            `https://raw.githubusercontent.com/mnako/hanzi-writer-data-ja/master/data/${kanji}.json`,
+            function (charData) {
+              onComplete(charData);
+            }
+          );
         },
+        width: 782,
+        height: 782,
+        padding: 5,
+        showOutline: true,
+        showCharacter: true,
+        outlineColor: "#fff",
+        drawingWidth: 4.1,
+        strokeAnimationSpeed: 0.5,
+        delayBetweenStrokes: 30,
+        renderer: "canvas",
       });
-      console.log("clicked");
-    });
 
+      document
+        .getElementById("animate-button")
+        .addEventListener("click", function (e) {
+          e.preventDefault();
+          document.querySelectorAll("video").forEach((video) => {
+            video.remove();
+          });
 
+          let startTime = performance.now();
 
-  const canvas = document.getElementById("animation-target");
+          writer.animateCharacter({
+            onComplete: function () {
+              let endTime = performance.now();
+              // Use DOMHighResTimeStamp for more accurate timing
+              const totalDuration = Math.round(endTime - startTime);
+              console.log(
+                "Animation complete! Duration: ",
+                totalDuration,
+                "ms"
+              );
+              writer.animateCharacter().then(() => {
+                getImageTemplate();
+                generateAudio();
+              });
+              generateVideo(totalDuration);
+            },
+          });
+          console.log("clicked");
+        });
 
-  function record(canvas, time, callback) {
-    var recordedChunks = [];
-    return new Promise(function (res, rej) {
-      var stream;
-      canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+      const canvas = document.getElementById("animation-target");
 
-      if (canvas.captureStream) {
-        stream = canvas.captureStream(25 /*fps*/);
-      } else if (canvas.mozCaptureStream) {
-        stream = canvas.mozCaptureStream(25 /*fps*/);
-      } else {
-        rej("captureStream is not supported");
-        return;
+      function record(canvas, time, callback) {
+        var recordedChunks = [];
+        return new Promise(function (res, rej) {
+          var stream;
+          canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+
+          if (canvas.captureStream) {
+            stream = canvas.captureStream(60 /*fps*/);
+          } else if (canvas.mozCaptureStream) {
+            stream = canvas.mozCaptureStream(60 /*fps*/);
+          } else {
+            rej("captureStream is not supported");
+            return;
+          }
+          mediaRecorder = new MediaRecorder(stream, {
+            mimeType: "video/webm; codecs=vp8",
+            videoBitsPerSecond: 1000000,
+            videoKeyFrameCount: 60,
+          });
+
+          //ondataavailable will fire in interval of `time || 4000 ms`
+          mediaRecorder.start(time || 4000);
+
+          mediaRecorder.ondataavailable = function (event) {
+            recordedChunks.push(event.data);
+            // after stop `dataavilable` event run one more time
+            if (mediaRecorder.state === "recording") {
+              mediaRecorder.stop();
+            }
+          };
+
+          mediaRecorder.onstop = async function (event) {
+            // make mp4 from webm
+            const blob = new Blob(recordedChunks, { type: "video/webm" });
+            const url = URL.createObjectURL(blob);
+            callback(blob);
+
+            res(url);
+          };
+
+          mediaRecorder.onerror = function (event) {
+            rej(event);
+          };
+        });
       }
-      mediaRecorder = new MediaRecorder(stream, {
-        mimeType: "video/webm; codecs=vp8",
-        videoKeyFrameCount: 25,
-      })
 
-      //ondataavailable will fire in interval of `time || 4000 ms`
-      mediaRecorder.start(time || 4000);
+      function generateVideo(time) {
+        const canvas = document.getElementById("animation-target");
 
-      mediaRecorder.ondataavailable = function (event) {
-        recordedChunks.push(event.data);
-        // after stop `dataavilable` event run one more time
-        if (mediaRecorder.state === "recording") {
-          mediaRecorder.stop();
-        }
-      };
+        let blobValue;
 
-      mediaRecorder.onstop = async function (event) {
-        // make mp4 from webm
-        const blob = new Blob(recordedChunks, { type: "video/webm" });
-        const url = URL.createObjectURL(blob);
-        callback(blob);
+        const recording = record(canvas, time, (blob) => {
+          blobValue = blob;
+        });
 
-        res(url);
-      };
-    });
-  }
+        // remove previous video
 
-  function generateVideo(time) {
-    const canvas = document.getElementById("animation-target");
+        var video$ = document.createElement("video");
+        video$.controls = true;
+        const animationArea = document.getElementById("animation-area");
+        animationArea.appendChild(video$);
+        recording.then((url) => {
+          video$.setAttribute("src", url);
+          sendVideoToServer(blobValue);
+        });
 
-    let blobValue;
+        // download it
+        var link$ = document.createElement("a");
+        link$.setAttribute("download", "recordingVideo");
+        recording.then((url) => {
+          link$.setAttribute("href", url);
+        });
+      }
 
-    const recording = record(canvas, time, (blob) => {
-      blobValue = blob;
+      async function sendVideoToServer(blob) {
+        await fetch("http://localhost:3000/raw/:cmd", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/octet-stream",
+          },
+          body: blob,
+        });
+      }
 
-    });
+      async function getImageTemplate() {
+        await fetch(`http://localhost:3000/image?url=template`);
+      }
 
-
-    // play it on another video element
-
-    var video$ = document.createElement("video");
-    video$.controls = true;
-    const animationArea = document.getElementById("animation-area");
-    animationArea.appendChild(video$);
-    recording.then((url) => {
-      video$.setAttribute("src", url)
-      sendVideoToServer(blobValue);
-    });
-
-    // download it
-    var link$ = document.createElement("a");
-    link$.setAttribute("download", "recordingVideo");
-    recording.then((url) => {
-      link$.setAttribute("href", url);
-    });
-  }
-
-  async function sendVideoToServer(blob) {
-    await fetch("http://localhost:3000/raw/:cmd", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/octet-stream",
-
-      },
-      body: blob,
-    });
-  }
-
-  async function getImageTemplate() {
-    await fetch(`http://localhost:3000/image?url=template`);
-  }
-</script>
-</body>
-
+      async function generateAudio() {
+        await fetch(`http://localhost:3000/audio`);
+      }
+    </script>
+  </body>
 </html>
